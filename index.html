@@ -11,9 +11,10 @@
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        /* DESAIN WARNA SERASI DENGAN POSTER INSTAGRAM */
         body {
-            background-color: #f3f4f6;
-            color: #333;
+            background: linear-gradient(135deg, #e29ab9 0%, #a68fc1 100%);
+            color: #5b4b8a;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -21,17 +22,19 @@
             padding: 20px;
         }
         .container {
-            background: white;
+            background: #f8f6f8;
             padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(91, 75, 138, 0.2);
             width: 100%;
             max-width: 450px;
             text-align: center;
+            border: 2px solid #cc7cc6;
         }
         h2 {
             margin-bottom: 20px;
-            color: #2c3e50;
+            color: #cc7cc6;
+            font-weight: 800;
         }
         .form-group {
             margin-bottom: 20px;
@@ -41,43 +44,48 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #555;
+            color: #5b4b8a;
         }
         input[type="text"] {
             width: 100%;
             padding: 12px;
-            border: 2px solid #ddd;
+            border: 2px solid #e29ab9;
             border-radius: 8px;
             font-size: 16px;
+            background: white;
+            color: #5b4b8a;
             transition: border-color 0.3s;
         }
         input[type="text"]:focus {
-            border-color: #3498db;
+            border-color: #cc7cc6;
             outline: none;
         }
         button {
             width: 100%;
             padding: 12px;
-            background-color: #3498db;
-            color: white;
+            background-color: #cc7cc6;
+            color: #f8f6f8;
             border: none;
             border-radius: 8px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.3s;
+            box-shadow: 0 4px 10px rgba(204, 124, 198, 0.3);
         }
         button:hover {
-            background-color: #2980b9;
+            background-color: #b562af;
         }
         button:disabled {
-            background-color: #bdc3c7;
+            background-color: #cbd5e1;
+            color: #94a3b8;
             cursor: not-allowed;
+            box-shadow: none;
         }
         .timer {
             font-size: 48px;
             font-weight: bold;
-            color: #e74c3c;
+            color: #ef4444;
             margin: 20px 0;
         }
         .hidden {
@@ -88,12 +96,14 @@
             font-weight: 600;
         }
         .info-box {
-            background: #e8f4f8;
+            background: rgba(204, 124, 198, 0.1);
             padding: 12px;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 14px;
-            color: #2980b9;
+            color: #cc7cc6;
             margin-bottom: 15px;
+            border: 1px solid rgba(204, 124, 198, 0.2);
+            font-weight: 600;
         }
     </style>
 </head>
@@ -114,7 +124,7 @@
     <!-- HALAMAN UTAMA KUIS -->
     <div id="quiz-page" class="hidden">
         <h2 id="room-status">Menunggu Pertanyaan Berjalan...</h2>
-        <div id="user-display" style="font-size:14px; margin-bottom:10px; color:#7f8c8d;"></div>
+        <div id="user-display" style="font-size:14px; margin-bottom:10px; color:#a68fc1; font-weight: 600;"></div>
         
         <div id="quiz-area" class="hidden">
             <div class="timer" id="countdown">10</div>
@@ -166,13 +176,11 @@
             let response = await fetch(WEB_APP_URL);
             let data = await response.json();
             
-            // 1. CEK UTAMA: Jika admin menyetel ke 0, detik ini juga langsung tendang ke luar
             if (data.activeQuestion == 0) {
                 kickToLoginPage();
-                return; // Stop eksekusi baris bawahnya
+                return;
             }
             
-            // 2. CEK LANJUTAN: Jika ada pertanyaan baru yang berjalan
             if (data.activeQuestion > currentQuestionNum) {
                 currentQuestionNum = data.activeQuestion;
                 startQuestionSession();
@@ -185,7 +193,7 @@
     function kickToLoginPage() {
         clearInterval(timerInterval);
         currentQuestionNum = 0;
-        localStorage.removeItem("uma_username"); // Hapus total memori username lama dari HP
+        localStorage.removeItem("uma_username"); 
         document.getElementById("username").value = "";
         document.getElementById("quiz-area").classList.add("hidden");
         document.getElementById("quiz-page").classList.add("hidden");
@@ -220,7 +228,7 @@
         document.getElementById("btn-submit").disabled = true;
         document.getElementById("countdown").innerText = "0";
         if (!isAnswered) {
-            document.getElementById("msg").style.color = "#e74c3c";
+            document.getElementById("msg").style.color = "#ef4444";
             document.getElementById("msg").innerText = message;
         }
     }
@@ -235,7 +243,7 @@
         isAnswered = true;
         document.getElementById("jawaban").disabled = true;
         document.getElementById("btn-submit").disabled = true;
-        document.getElementById("msg").style.color = "#f39c12";
+        document.getElementById("msg").style.color = "#cc7cc6";
         document.getElementById("msg").innerText = "Sedang mengirim...";
 
         try {
@@ -254,13 +262,13 @@
                 body: JSON.stringify(payload)
             });
 
-            document.getElementById("msg").style.color = "#2ecc71";
+            document.getElementById("msg").style.color = "#cc7cc6";
             document.getElementById("msg").innerText = "Jawaban Terkirim! Menunggu koreksi juri...";
             clearInterval(timerInterval);
             document.getElementById("countdown").innerText = "-";
 
         } catch (error) {
-            document.getElementById("msg").style.color = "#e74c3c";
+            document.getElementById("msg").style.color = "#ef4444";
             document.getElementById("msg").innerText = "Gagal mengirim jawaban. Coba lagi!";
             document.getElementById("jawaban").disabled = false;
             document.getElementById("btn-submit").disabled = false;
