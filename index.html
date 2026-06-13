@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Komunitas UmaMusume</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f3f4f6; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
+        h2 { margin-bottom: 20px; color: #2c3e50; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        input[type="text"] { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
+        input[type="text"]:focus { border-color: #3498db; outline: none; }
+        button { width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+        .timer { font-size: 48px; font-weight: bold; color: #e74c3c; margin: 20px 0; }
+        .hidden { display: none !important; }
+        .status-msg { margin-top: 15px; font-weight: 600; }
+        .info-box { background: #e8f4f8; padding: 12px; border-radius: 6px; font-size: 14px; color: #2980b9; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- HALAMAN LOGIN USERNAME -->
+    <div id="login-page">
+        <h2>Kuis Komunitas</h2>
+        <div class="info-box">Silakan masukkan nama akun Umamusume Anda untuk berpartisipasi.</div>
+        <div class="form-group">
+            <label for="username">Username Umamusume:</label>
+            <input type="text" id="username" placeholder="Masukkan username Anda...">
+        </div>
+        <button id="btn-login" onclick="saveUsername()">Masuk ke Room Kuis</button>
+    </div>
+
+    <!-- HALAMAN UTAMA KUIS -->
+    <div id="quiz-page" class="hidden">
+        <h2 id="room-status">Menunggu Pertanyaan Berjalan...</h2>
+        <div id="user-display" style="font-size:14px; margin-bottom:10px; color:#7f8c8d;"></div>
+        
+        <div id="quiz-area" class="hidden">
+            <div class="timer" id="countdown">10</div>
+            <div class="form-group">
+                <label for="jawaban">Jawaban Anda:</label>
+                <input type="text" id="jawaban" placeholder="Ketik jawaban di sini..." autocomplete="off">
+            </div>
+            <button id="btn-submit" onclick="submitJawaban()">Kirim Jawaban</button>
+        </div>
+        
+        <div id="msg" class="status-msg"></div>
+    </div>
+</div>
+
+<script>
+    // BARIS 112: GANTI URL DI BAWAH INI DENGAN WEB APP URL MILIKMU!
+    const WEB_APP_URL = "https://script.google.com/macros/s/XXXXXXXXXXXX/exec"; 
+    
+    let currentUsername = "";
+    let currentQuestionNum = 0;
+    let timerInterval = null;
+    let isAnswered = false;
+
+    if (localStorage.getItem("uma_username")) {
+        currentUsername = localStorage.getItem("uma_username");
+        showQuizPage();
+    }
+
+    function saveUsername() {
+        const input = document.getElementById("username").value.trim();
+        if (!input) { alert("Username tidak boleh kosong!"); return; }
+        currentUsername = input;
+        localStorage.setItem("uma_username", currentUsername);
+        showQuizPage();
+    }
+
+    function showQuizPage() {
+        document.getElementById("login-page").classList.add("hidden");
+        document.getElementById("quiz-page").classList.remove("hidden");
+        document.getElementById("user-display").innerText = "Login sebagai: " + currentUsername;
+        setInterval(checkActiveQuestion, 2000); // Cek Google Sheets tiap 2 detik
+    }
+
+    async function checkActiveQuestion() {
+        try {
+            let response = await fetch(WEB_APP_URL);
+            let data = await response.json();
+            
+            if (data.activeQuestion > currentQuestionNum && data.activeQuestion != 0) {
+                currentQuestionNum = data.activeQuestion;
+                startQuestionSession();
+            } else if (data.activeQuestion == 0) {
+                resetToWaitingRoom();
+            }
+        } catch (error) { console.error("Gagal sinkronisasi data:", error); }
+    }
+
+    function startQuestionSession() {
+        isAnswered = false;
+        document.getElementById("room-status").innerText = "Pertanyaan " + currentQuestionNum + " Dimulai!";
+        document.getElementById("quiz-area").classList.remove("hidden");
+        document.getElementById("jawaban").value = "";
+        document.getElementById("jawaban").disabled = false;
+        document.getElementById("btn-submit").disabled = false;
+        document.getElementById("msg").innerText = "";
+        
+        let timeLeft = 10;
+        document.getElementById("countdown").innerText = timeLeft;
+        
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById("countdown").innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                lockInput("Waktu habis!");
+            }
+        }, 1000);
+    }
+
+    function resetToWaitingRoom() {
+        clearInterval(timerInterval);
+        currentQuestionNum = 0;
+        document.getElementById("room-status").innerText = "Menunggu Pertanyaan Selanjutnya...";
+        document.getElementById("quiz-area").classList.add("hidden");
+        document.getElementById("msg").innerText = "";
+    }
+
+    function lockInput(message) {
+        document.getElementById("jawaban").disabled = true;
+        document.getElementById("btn-submit").disabled = true;
+        document.getElementById("countdown").innerText = "0";
+        if (!isAnswered) {
+            document.getElementById("msg").style.color = "#e74c3c";
+            document.getElementById("msg").innerText = message;
+        }
+    }
+
+    async function submitJawaban() {
+        const jawabanInput = document.getElementById("jawaban").value.trim();
+        if (!jawabanInput) { alert("Isi jawaban dulu!"); return; }
+        
+        isAnswered = true;
+        document.getElementById("jawaban").disabled = true;
+        document.getElementById("btn-submit").disabled = true;
+        document.getElementById("msg").style.color = "#f39c12";
+        document.getElementById("msg").innerText = "Sedang mengirim...";
+
+        try {
+            let payload = { username: currentUsername, jawaban: jawabanInput, questionNumber: currentQuestionNum };
+            await fetch(WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            document.getElementById("msg").style.color = "#2ecc71";
+            document.getElementById("msg").innerText = "Jawaban Terkirim! Menunggu koreksi juri...";
+            clearInterval(timerInterval);
+            document.getElementById("countdown").innerText = "-";
+        } catch (error) {
+            document.getElementById("msg").style.color = "#e74c3c";
+            document.getElementById("msg").innerText = "Gagal mengirim jawaban.";
+            document.getElementById("jawaban").disabled = false;
+            document.getElementById("btn-submit").disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
