@@ -3,22 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kuis Komunitas UmaMusume</title>
+    <title>UmaMusume Community Quiz Tools</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background-color: #f3f4f6; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
-        h2 { margin-bottom: 20px; color: #2c3e50; }
-        .form-group { margin-bottom: 20px; text-align: left; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
-        input[type="text"] { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
-        input[type="text"]:focus { border-color: #3498db; outline: none; }
-        button { width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
-        .timer { font-size: 48px; font-weight: bold; color: #e74c3c; margin: 20px 0; }
-        .hidden { display: none !important; }
-        .status-msg { margin-top: 15px; font-weight: 600; }
-        .info-box { background: #e8f4f8; padding: 12px; border-radius: 6px; font-size: 14px; color: #2980b9; margin-bottom: 15px; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f3f4f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .timer {
+            font-size: 48px;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 20px 0;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .status-msg {
+            margin-top: 15px;
+            font-weight: 600;
+        }
+        .info-box {
+            background: #e8f4f8;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #2980b9;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -54,7 +130,6 @@
 </div>
 
 <script>
-    // BARIS 112: GANTI URL DI BAWAH INI DENGAN WEB APP URL MILIKMU!
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwxBS2ggKLPp9in6nWPORPXGQ704ppXuFThANpRCuLI0BbBfsswjBBPBvyW3xp42jUv/exec"; 
     
     let currentUsername = "";
@@ -69,7 +144,10 @@
 
     function saveUsername() {
         const input = document.getElementById("username").value.trim();
-        if (!input) { alert("Username tidak boleh kosong!"); return; }
+        if (!input) {
+            alert("Username tidak boleh kosong!");
+            return;
+        }
         currentUsername = input;
         localStorage.setItem("uma_username", currentUsername);
         showQuizPage();
@@ -79,7 +157,8 @@
         document.getElementById("login-page").classList.add("hidden");
         document.getElementById("quiz-page").classList.remove("hidden");
         document.getElementById("user-display").innerText = "Login sebagai: " + currentUsername;
-        setInterval(checkActiveQuestion, 2000); // Cek Google Sheets tiap 2 detik
+        
+        setInterval(checkActiveQuestion, 2000); 
     }
 
     async function checkActiveQuestion() {
@@ -93,7 +172,9 @@
             } else if (data.activeQuestion == 0) {
                 resetToWaitingRoom();
             }
-        } catch (error) { console.error("Gagal sinkronisasi data:", error); }
+        } catch (error) {
+            console.error("Gagal sinkronisasi data:", error);
+        }
     }
 
     function startQuestionSession() {
@@ -139,7 +220,10 @@
 
     async function submitJawaban() {
         const jawabanInput = document.getElementById("jawaban").value.trim();
-        if (!jawabanInput) { alert("Isi jawaban dulu!"); return; }
+        if (!jawabanInput) {
+            alert("Isi jawaban dulu!");
+            return;
+        }
         
         isAnswered = true;
         document.getElementById("jawaban").disabled = true;
@@ -148,24 +232,34 @@
         document.getElementById("msg").innerText = "Sedang mengirim...";
 
         try {
-            let payload = { username: currentUsername, jawaban: jawabanInput, questionNumber: currentQuestionNum };
+            let payload = {
+                username: currentUsername,
+                jawaban: jawabanInput,
+                questionNumber: currentQuestionNum
+            };
+
             await fetch(WEB_APP_URL, {
                 method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
+                mode: "no-cors", 
+                headers: {
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify(payload)
             });
+
             document.getElementById("msg").style.color = "#2ecc71";
             document.getElementById("msg").innerText = "Jawaban Terkirim! Menunggu koreksi juri...";
             clearInterval(timerInterval);
             document.getElementById("countdown").innerText = "-";
+
         } catch (error) {
             document.getElementById("msg").style.color = "#e74c3c";
-            document.getElementById("msg").innerText = "Gagal mengirim jawaban.";
+            document.getElementById("msg").innerText = "Gagal mengirim jawaban. Coba lagi!";
             document.getElementById("jawaban").disabled = false;
             document.getElementById("btn-submit").disabled = false;
         }
     }
 </script>
+
 </body>
 </html>
