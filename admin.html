@@ -12,6 +12,7 @@
         .control-panel { display: flex; gap: 15px; margin-bottom: 30px; background: #eef2f7; padding: 20px; border-radius: 8px; align-items: center; }
         .btn { padding: 12px 24px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s; }
         .btn-primary { background: #3498db; color: white; }
+        .btn-success { background: #2ecc71; color: white; }
         .btn-danger { background: #e74c3c; color: white; }
         .btn:disabled { background: #bdc3c7; cursor: not-allowed; }
         .status-box { flex-grow: 1; font-size: 18px; font-weight: 600; }
@@ -63,7 +64,6 @@
 </div>
 
 <script>
-    // BARIS 53: GANTI URL DI BAWAH INI DENGAN WEB APP URL MILIKMU!
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwxBS2ggKLPp9in6nWPORPXGQ704ppXuFThANpRCuLI0BbBfsswjBBPBvyW3xp42jUv/exec"; 
     
     let currentQ = 0;
@@ -112,7 +112,9 @@
             document.getElementById("text-pertanyaan").innerText = "Sesi dihentikan / Jeda kuis.";
             document.getElementById("results-body").innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">Sesi dikosongkan.</td></tr>';
             document.getElementById("btn-next").disabled = false;
-        } catch (error) { alert("Gagal menghentikan sesi!"); }
+        } catch (error) {
+            alert("Gagal menghentikan sesi!");
+        }
     }
 
     async function fetchResults() {
