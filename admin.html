@@ -43,4 +43,213 @@
         /* TIMER BERBENTUK BULATAN BESAR DI POJOK */
         .timer-display { 
             font-size: 28px; 
-            font-weight: 9
+            font-weight: 900; 
+            color: #ef4444; 
+            background: #ffffff; 
+            padding: 4px 18px; 
+            border-radius: 20px; 
+            border: 2px solid #fee2e2;
+        }
+
+        /* 2. BAGIAN TENGAH: KOTAK PERTANYAAN RAKSASA (FOKUS UTAMA) */
+        .main-question-zone {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 0;
+        }
+        .question-card {
+            width: 100%;
+            max-width: 950px;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+            padding: 60px 40px;
+            border-radius: 24px;
+            border: 2px solid rgba(245, 158, 11, 0.4);
+            box-shadow: 0 0 50px rgba(245, 158, 11, 0.1);
+            position: relative;
+        }
+        .question-tag {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #f59e0b;
+            color: #0f0b29;
+            padding: 4px 24px;
+            font-size: 12px;
+            font-weight: 900;
+            border-radius: 30px;
+            letter-spacing: 2px;
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4);
+        }
+        #text-pertanyaan {
+            font-size: 44px; /* Ukuran Teks Sinematik Raksasa */
+            font-weight: 800;
+            line-height: 1.5;
+            color: #ffffff;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            word-wrap: break-word;
+        }
+
+        /* 3. BAGIAN BAWAH: TABEL REKAP KELAS PREMIUM */
+        .bottom-results-zone {
+            background: #ffffff;
+            color: #1e293b;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.3);
+        }
+        .bottom-results-zone h2 { font-size: 18px; font-weight: 800; margin-bottom: 12px; color: #0f172a; }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
+        th, td { padding: 10px 14px; text-align: left; font-size: 14px; }
+        th { background-color: #f8fafc; color: #64748b; font-weight: 700; border-bottom: 2px solid #e2e8f0; }
+        td { border-bottom: 1px solid #edf2f7; }
+        
+        .row-correct { background-color: #dcfce7 !important; color: #14532d; font-weight: 600; }
+        .row-banned { background-color: #f1f5f9 !important; color: #94a3b8; text-decoration: line-through; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; display: inline-block; }
+        .badge-success { background: #bbf7d0; color: #166534; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="status-box">SOAL AKTIF: <span id="active-num" style="color: #f59e0b;">0</span></div>
+        <div class="control-buttons">
+            <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()">Pertanyaan Selanjutnya</button>
+            <button class="btn btn-danger" id="btn-stop" onclick="stopQuestion()">Reset Sesi / Logout Semua User</button>
+        </div>
+        <div class="timer-display" id="admin-timer">10</div>
+    </div>
+
+    <div class="main-question-zone">
+        <div class="question-card">
+            <div class="question-tag" id="tag-status">READY TO START</div>
+            <span id="text-pertanyaan">Belum ada pertanyaan yang dimulai.<br><span style="font-size: 20px; font-weight: 400; color: #94a3b8;">Silakan lakukan screenshare halaman ini ke Discord!</span></span>
+        </div>
+    </div>
+
+    <div class="bottom-results-zone">
+        <h2>Hasil Jawaban Masuk (Urutan Tercepat)</h2>
+        <table id="results-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">No</th>
+                    <th style="width: 130px;">Waktu Masuk</th>
+                    <th>Username Umamusume</th>
+                    <th>Jawaban Peserta</th>
+                    <th style="width: 200px;">Status Validasi</th>
+                </tr>
+            </thead>
+            <tbody id="results-body">
+                <tr>
+                    <td colspan="5" style="text-align:center; color:#94a3b8; padding: 15px;">Belum ada data masuk. Jalankan kuis untuk melihat peringkat kecepatan.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+<script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwxBS2ggKLPp9in6nWPORPXGQ704ppXuFThANpRCuLI0BbBfsswjBBPBvyW3xp42jUv/exec"; 
+    
+    let currentQ = 0;
+    let timerInterval = null;
+
+    async function nextQuestion() {
+        document.getElementById("btn-next").disabled = true;
+        let nextQ = currentQ + 1;
+        document.getElementById("tag-status").innerText = "LOADING...";
+        
+        try {
+            let response = await fetch(`${WEB_APP_URL}?action=nextQuestion&q=${nextQ}`);
+            let data = await response.json();
+            
+            if(data.status === "success") {
+                currentQ = nextQ;
+                document.getElementById("active-num").innerText = currentQ;
+                document.getElementById("text-pertanyaan").innerText = data.questionText;
+                document.getElementById("tag-status").innerText = "SOAL " + currentQ;
+                
+                let timeLeft = 10;
+                document.getElementById("admin-timer").innerText = timeLeft;
+                
+                clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    document.getElementById("admin-timer").innerText = timeLeft;
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        document.getElementById("btn-next").disabled = false;
+                        document.getElementById("tag-status").innerText = "WAKTU HABIS";
+                        fetchResults();
+                    }
+                }, 1000);
+            }
+        } catch (error) {
+            alert("Gagal memajukan pertanyaan!");
+            document.getElementById("btn-next").disabled = false;
+            document.getElementById("tag-status").innerText = "ERROR";
+        }
+    }
+
+    async function stopQuestion() {
+        try {
+            await fetch(`${WEB_APP_URL}?action=stop`);
+            clearInterval(timerInterval);
+            currentQ = 0;
+            document.getElementById("active-num").innerText = "0";
+            document.getElementById("admin-timer").innerText = "10";
+            document.getElementById("tag-status").innerText = "SESSION RESET";
+            document.getElementById("text-pertanyaan").innerHTML = 'Sesi dihentikan / Jeda kuis.<br><span style="font-size: 20px; font-weight: 400; color: #94a3b8;">HP Seluruh peserta otomatis ter-logout dari room kuis.</span>';
+            document.getElementById("results-body").innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding: 15px;">Sesi dikosongkan.</td></tr>';
+            document.getElementById("btn-next").disabled = false;
+        } catch (error) {
+            alert("Gagal menghentikan sesi!");
+        }
+    }
+
+    async function fetchResults() {
+        document.getElementById("results-body").innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 15px; color:#64748b;">Sedang merekap data presisi dari database Google Sheets...</td></tr>';
+        try {
+            let response = await fetch(`${WEB_APP_URL}?action=getResults&q=${currentQ}`);
+            let data = await response.json();
+            
+            let html = "";
+            if(data.results.length === 0) {
+                html = '<tr><td colspan="5" style="text-align:center; color:#ef4444; font-weight:700; padding: 15px;">Tidak ada peserta yang mengirimkan jawaban tepat waktu!</td></tr>';
+            } else {
+                data.results.forEach((row, index) => {
+                    let rowClass = "";
+                    let statusBadge = "";
+                    
+                    if(row.isCorrect && !row.isBanned) {
+                        rowClass = "row-correct";
+                        statusBadge = '<span class="badge badge-success">BENAR & TERCEPAT</span>';
+                    } else if(row.isCorrect && row.isBanned) {
+                        rowClass = "row-banned";
+                        statusBadge = '<span class="badge badge-danger">BENAR (BANNED >3 WIN)</span>';
+                    } else {
+                        statusBadge = '<span class="badge" style="background:#e2e8f0; color:#475569;">SALAH</span>';
+                    }
+                    
+                    html += `<tr class="${rowClass}">
+                        <td>${index + 1}</td>
+                        <td>${row.timestamp}</td>
+                        <td>${row.username}</td>
+                        <td>${row.jawaban}</td>
+                        <td>${statusBadge}</td>
+                    </tr>`;
+                });
+            }
+            document.getElementById("results-body").innerHTML = html;
+        } catch (error) {
+            document.getElementById("results-body").innerHTML = '<tr><td colspan="5" style="text-align:center; color:#ef4444; padding: 15px;">Gagal mengambil rekap jawaban.</td></tr>';
+        }
+    }
+</script>
+</body>
+</html>
