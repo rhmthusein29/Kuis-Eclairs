@@ -144,7 +144,6 @@
     let timerInterval = null;
     let isAnswered = false;
     let mainLoop = null;
-    let pingLoop = null;
 
     if (localStorage.getItem("uma_username")) {
         currentUsername = localStorage.getItem("uma_username");
@@ -167,12 +166,8 @@
         document.getElementById("quiz-page").classList.remove("hidden");
         document.getElementById("user-display").innerText = "Login sebagai: " + currentUsername;
         
-        // Loop 1: Khusus memantau status perubahan soal juri (Setiap 2 detik)
+        // Memantau perubahan soal juri (Setiap 2 detik)
         mainLoop = setInterval(checkActiveQuestion, 2000); 
-        
-        // Loop 2: Khusus mengirim tanda aktif/online (Setiap 5 detik agar server Google santai & stabil)
-        sendPingStatus();
-        pingLoop = setInterval(sendPingStatus, 5000);
     }
 
     async function checkActiveQuestion() {
@@ -180,32 +175,39 @@
             let response = await fetch(`${WEB_APP_URL}?action=checkStatus`);
             let data = await response.json();
             
-            if (data.activeQuestion === "kick" || data.activeQuestion == 0) {
+            // PERBAIKAN UTAMA: Hanya kick jika data valid dan bernilai "kick"
+            if (data && data.activeQuestion === "kick") {
                 kickToLoginPage();
                 return;
             }
             
-            if (parseInt(data.activeQuestion) > currentQuestionNum) {
-                currentQuestionNum = parseInt(data.activeQuestion);
-                startQuestionSession();
+            // Mengabaikan respons kosong atau error, hanya jalan jika ada angka baru yang valid
+            if (data && data.activeQuestion && !isNaN(data.activeQuestion)) {
+                let nextQ = parseInt(data.activeQuestion);
+                if (nextQ > currentQuestionNum) {
+                    currentQuestionNum = nextQ;
+                    startQuestionSession();
+                } else if (nextQ === 0 && currentQuestionNum !== 0) {
+                    resetToWaitingRoom();
+                }
             }
         } catch (error) {
-            console.error("Gagal sinkronisasi data.");
+            // Jika server lemot/error, biarkan saja dan jangan ditendang
+            console.log("Koneksi sibuk, mencoba kembali...");
         }
     }
 
-    async function sendPingStatus() {
-        try {
-            await fetch(`${WEB_APP_URL}?action=pingStatus&u=${encodeURIComponent(currentUsername)}`);
-        } catch (e) {
-            console.error("Gagal mengirim status online.");
-        }
+    function resetToWaitingRoom() {
+        clearInterval(timerInterval);
+        currentQuestionNum = 0;
+        document.getElementById("room-status").innerText = "Menunggu Pertanyaan Selanjutnya...";
+        document.getElementById("quiz-area").classList.add("hidden");
+        document.getElementById("msg").innerText = "";
     }
 
     function kickToLoginPage() {
         clearInterval(timerInterval);
         clearInterval(mainLoop);
-        clearInterval(pingLoop);
         currentQuestionNum = 0;
         localStorage.removeItem("uma_username"); 
         document.getElementById("username").value = "";
