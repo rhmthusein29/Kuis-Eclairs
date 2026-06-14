@@ -5,112 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UmaMusume Community Quiz Tools</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        /* DESAIN WARNA SERASI DENGAN POSTER INSTAGRAM */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
         body {
             background: linear-gradient(135deg, #e29ab9 0%, #a68fc1 100%);
-            color: #5b4b8a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
+            color: #5b4b8a; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px;
         }
         .container {
-            background: #f8f6f8;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 8px 25px rgba(91, 75, 138, 0.2);
-            width: 100%;
-            max-width: 450px;
-            text-align: center;
-            border: 2px solid #cc7cc6;
+            background: #f8f6f8; padding: 30px; border-radius: 16px; box-shadow: 0 8px 25px rgba(91, 75, 138, 0.2);
+            width: 100%; max-width: 450px; text-align: center; border: 2px solid #cc7cc6;
         }
-        h2 {
-            margin-bottom: 20px;
-            color: #cc7cc6;
-            font-weight: 800;
-        }
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #5b4b8a;
-        }
+        h2 { margin-bottom: 20px; color: #cc7cc6; font-weight: 800; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #5b4b8a; }
         input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e29ab9;
-            border-radius: 8px;
-            font-size: 16px;
-            background: white;
-            color: #5b4b8a;
-            transition: border-color 0.3s;
+            width: 100%; padding: 12px; border: 2px solid #e29ab9; border-radius: 8px; font-size: 16px;
+            background: white; color: #5b4b8a; transition: border-color 0.3s;
         }
-        input[type="text"]:focus {
-            border-color: #cc7cc6;
-            outline: none;
-        }
+        input[type="text"]:focus { border-color: #cc7cc6; outline: none; }
         button {
-            width: 100%;
-            padding: 12px;
-            background-color: #cc7cc6;
-            color: #f8f6f8;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
+            width: 100%; padding: 12px; background-color: #cc7cc6; color: #f8f6f8; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: bold; cursor: pointer; transition: background-color 0.3s;
             box-shadow: 0 4px 10px rgba(204, 124, 198, 0.3);
         }
-        button:hover {
-            background-color: #b562af;
-        }
-        button:disabled {
-            background-color: #cbd5e1;
-            color: #94a3b8;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-        .timer {
-            font-size: 48px;
-            font-weight: bold;
-            color: #ef4444;
-            margin: 20px 0;
-        }
-        .hidden {
-            display: none !important;
-        }
-        .status-msg {
-            margin-top: 15px;
-            font-weight: 600;
-        }
+        button:hover { background-color: #b562af; }
+        button:disabled { background-color: #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
+        .timer { font-size: 48px; font-weight: bold; color: #ef4444; margin: 20px 0; }
+        .hidden { display: none !important; }
+        .status-msg { margin-top: 15px; font-weight: 600; }
         .info-box {
-            background: rgba(204, 124, 198, 0.1);
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            color: #cc7cc6;
-            margin-bottom: 15px;
-            border: 1px solid rgba(204, 124, 198, 0.2);
-            font-weight: 600;
+            background: rgba(204, 124, 198, 0.1); padding: 12px; border-radius: 8px; font-size: 14px;
+            color: #cc7cc6; margin-bottom: 15px; border: 1px solid rgba(204, 124, 198, 0.2); font-weight: 600;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- HALAMAN LOGIN USERNAME -->
     <div id="login-page">
         <h2>Kuis Komunitas</h2>
         <div class="info-box">Silakan masukkan nama akun Umamusume Anda untuk berpartisipasi.</div>
@@ -121,7 +51,6 @@
         <button id="btn-login" onclick="saveUsername()">Masuk ke Room Kuis</button>
     </div>
 
-    <!-- HALAMAN UTAMA KUIS -->
     <div id="quiz-page" class="hidden">
         <h2 id="room-status">Menunggu Pertanyaan Berjalan...</h2>
         <div id="user-display" style="font-size:14px; margin-bottom:10px; color:#a68fc1; font-weight: 600;"></div>
@@ -176,17 +105,20 @@
             let response = await fetch(WEB_APP_URL);
             let data = await response.json();
             
-            if (data.activeQuestion == 0) {
+            if (data && data.activeQuestion == 0) {
                 kickToLoginPage();
                 return;
             }
             
-            if (data.activeQuestion > currentQuestionNum) {
-                currentQuestionNum = data.activeQuestion;
-                startQuestionSession();
+            if (data && data.activeQuestion && !isNaN(data.activeQuestion)) {
+                let nextQ = parseInt(data.activeQuestion);
+                if (nextQ > currentQuestionNum) {
+                    currentQuestionNum = nextQ;
+                    startQuestionSession();
+                }
             }
         } catch (error) {
-            console.error("Gagal sinkronisasi data:", error);
+            console.log("Koneksi sibuk...");
         }
     }
 
@@ -256,9 +188,7 @@
             await fetch(WEB_APP_URL, {
                 method: "POST",
                 mode: "no-cors", 
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
 
