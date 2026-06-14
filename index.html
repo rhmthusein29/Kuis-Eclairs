@@ -171,9 +171,10 @@
         setInterval(checkActiveQuestion, 2000); 
     }
 
-    async function checkActiveQuestion() {
+async function checkActiveQuestion() {
         try {
-            let response = await fetch(WEB_APP_URL);
+            // PERBAIKAN: Mengirim nama user (?u=nama) agar admin tahu user ini masih standby membuka web
+            let response = await fetch(`${WEB_APP_URL}?u=${encodeURIComponent(currentUsername)}`);
             let data = await response.json();
             
             if (data.activeQuestion == 0) {
