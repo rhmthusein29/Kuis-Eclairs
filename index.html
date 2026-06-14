@@ -11,7 +11,6 @@
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        /* DESAIN WARNA SERASI DENGAN POSTER INSTAGRAM */
         body {
             background: linear-gradient(135deg, #e29ab9 0%, #a68fc1 100%);
             color: #5b4b8a;
@@ -110,7 +109,6 @@
 <body>
 
 <div class="container">
-    <!-- HALAMAN LOGIN USERNAME -->
     <div id="login-page">
         <h2>Kuis Komunitas</h2>
         <div class="info-box">Silakan masukkan nama akun Umamusume Anda untuk berpartisipasi.</div>
@@ -121,7 +119,6 @@
         <button id="btn-login" onclick="saveUsername()">Masuk ke Room Kuis</button>
     </div>
 
-    <!-- HALAMAN UTAMA KUIS -->
     <div id="quiz-page" class="hidden">
         <h2 id="room-status">Menunggu Pertanyaan Berjalan...</h2>
         <div id="user-display" style="font-size:14px; margin-bottom:10px; color:#a68fc1; font-weight: 600;"></div>
@@ -146,6 +143,8 @@
     let currentQuestionNum = 0;
     let timerInterval = null;
     let isAnswered = false;
+    let mainLoop = null;
+    let pingLoop = null;
 
     if (localStorage.getItem("uma_username")) {
         currentUsername = localStorage.getItem("uma_username");
@@ -168,31 +167,45 @@
         document.getElementById("quiz-page").classList.remove("hidden");
         document.getElementById("user-display").innerText = "Login sebagai: " + currentUsername;
         
-        setInterval(checkActiveQuestion, 2000); 
+        // Loop 1: Khusus memantau status perubahan soal juri (Setiap 2 detik)
+        mainLoop = setInterval(checkActiveQuestion, 2000); 
+        
+        // Loop 2: Khusus mengirim tanda aktif/online (Setiap 5 detik agar server Google santai & stabil)
+        sendPingStatus();
+        pingLoop = setInterval(sendPingStatus, 5000);
     }
 
-async function checkActiveQuestion() {
+    async function checkActiveQuestion() {
         try {
-            // PERBAIKAN: Mengirim nama user (?u=nama) agar admin tahu user ini masih standby membuka web
-            let response = await fetch(`${WEB_APP_URL}?u=${encodeURIComponent(currentUsername)}`);
+            let response = await fetch(`${WEB_APP_URL}?action=checkStatus`);
             let data = await response.json();
             
-            if (data.activeQuestion == 0) {
+            if (data.activeQuestion === "kick" || data.activeQuestion == 0) {
                 kickToLoginPage();
                 return;
             }
             
-            if (data.activeQuestion > currentQuestionNum) {
-                currentQuestionNum = data.activeQuestion;
+            if (parseInt(data.activeQuestion) > currentQuestionNum) {
+                currentQuestionNum = parseInt(data.activeQuestion);
                 startQuestionSession();
             }
         } catch (error) {
-            console.error("Gagal sinkronisasi data:", error);
+            console.error("Gagal sinkronisasi data.");
+        }
+    }
+
+    async function sendPingStatus() {
+        try {
+            await fetch(`${WEB_APP_URL}?action=pingStatus&u=${encodeURIComponent(currentUsername)}`);
+        } catch (e) {
+            console.error("Gagal mengirim status online.");
         }
     }
 
     function kickToLoginPage() {
         clearInterval(timerInterval);
+        clearInterval(mainLoop);
+        clearInterval(pingLoop);
         currentQuestionNum = 0;
         localStorage.removeItem("uma_username"); 
         document.getElementById("username").value = "";
