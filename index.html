@@ -11,6 +11,7 @@
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        /* DESAIN WARNA SERASI DENGAN POSTER INSTAGRAM */
         body {
             background: linear-gradient(135deg, #e29ab9 0%, #a68fc1 100%);
             color: #5b4b8a;
@@ -109,6 +110,7 @@
 <body>
 
 <div class="container">
+    <!-- HALAMAN LOGIN USERNAME -->
     <div id="login-page">
         <h2>Kuis Komunitas</h2>
         <div class="info-box">Silakan masukkan nama akun Umamusume Anda untuk berpartisipasi.</div>
@@ -119,6 +121,7 @@
         <button id="btn-login" onclick="saveUsername()">Masuk ke Room Kuis</button>
     </div>
 
+    <!-- HALAMAN UTAMA KUIS -->
     <div id="quiz-page" class="hidden">
         <h2 id="room-status">Menunggu Pertanyaan Berjalan...</h2>
         <div id="user-display" style="font-size:14px; margin-bottom:10px; color:#a68fc1; font-weight: 600;"></div>
@@ -143,7 +146,6 @@
     let currentQuestionNum = 0;
     let timerInterval = null;
     let isAnswered = false;
-    let mainLoop = null;
 
     if (localStorage.getItem("uma_username")) {
         currentUsername = localStorage.getItem("uma_username");
@@ -166,48 +168,30 @@
         document.getElementById("quiz-page").classList.remove("hidden");
         document.getElementById("user-display").innerText = "Login sebagai: " + currentUsername;
         
-        // Memantau perubahan soal juri (Setiap 2 detik)
-        mainLoop = setInterval(checkActiveQuestion, 2000); 
+        setInterval(checkActiveQuestion, 2000); 
     }
 
     async function checkActiveQuestion() {
         try {
-            let response = await fetch(`${WEB_APP_URL}?action=checkStatus`);
+            let response = await fetch(WEB_APP_URL);
             let data = await response.json();
             
-            // PERBAIKAN UTAMA: Hanya kick jika data valid dan bernilai "kick"
-            if (data && data.activeQuestion === "kick") {
+            if (data.activeQuestion == 0) {
                 kickToLoginPage();
                 return;
             }
             
-            // Mengabaikan respons kosong atau error, hanya jalan jika ada angka baru yang valid
-            if (data && data.activeQuestion && !isNaN(data.activeQuestion)) {
-                let nextQ = parseInt(data.activeQuestion);
-                if (nextQ > currentQuestionNum) {
-                    currentQuestionNum = nextQ;
-                    startQuestionSession();
-                } else if (nextQ === 0 && currentQuestionNum !== 0) {
-                    resetToWaitingRoom();
-                }
+            if (data.activeQuestion > currentQuestionNum) {
+                currentQuestionNum = data.activeQuestion;
+                startQuestionSession();
             }
         } catch (error) {
-            // Jika server lemot/error, biarkan saja dan jangan ditendang
-            console.log("Koneksi sibuk, mencoba kembali...");
+            console.error("Gagal sinkronisasi data:", error);
         }
-    }
-
-    function resetToWaitingRoom() {
-        clearInterval(timerInterval);
-        currentQuestionNum = 0;
-        document.getElementById("room-status").innerText = "Menunggu Pertanyaan Selanjutnya...";
-        document.getElementById("quiz-area").classList.add("hidden");
-        document.getElementById("msg").innerText = "";
     }
 
     function kickToLoginPage() {
         clearInterval(timerInterval);
-        clearInterval(mainLoop);
         currentQuestionNum = 0;
         localStorage.removeItem("uma_username"); 
         document.getElementById("username").value = "";
