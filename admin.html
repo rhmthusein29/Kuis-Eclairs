@@ -168,7 +168,7 @@
                 timerInterval = setInterval(() => {
                     let currentServerTime = Date.now() + adminServerOffset;
                     let elapsedMs = currentServerTime - adminStartTime;
-                    let preciseTimeLeft = 10 - (elapsedMs / 1000);
+                    let preciseTimeLeft = 20 - (elapsedMs / 1000);
                     
                     if (preciseTimeLeft <= 0) {
                         clearInterval(timerInterval);
@@ -194,7 +194,7 @@
             clearInterval(timerInterval);
             currentQ = 0;
             document.getElementById("active-num").innerText = "0";
-            document.getElementById("admin-timer").innerText = "10";
+            document.getElementById("admin-timer").innerText = "20";
             document.getElementById("tag-status").innerText = "SESSION RESET";
             document.getElementById("text-pertanyaan").innerHTML = 'Sesi dihentikan / Jeda kuis.<br><span style="font-size: 20px; font-weight: 400; color: #a68fc1;">HP Seluruh peserta otomatis ter-logout dari room kuis.</span>';
             document.getElementById("results-body").innerHTML = '<tr><td colspan="5" style="text-align:center; color:#a68fc1; padding: 15px;">Sesi dikosongkan.</td></tr>';
