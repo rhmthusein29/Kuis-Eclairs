@@ -36,11 +36,14 @@
             background: rgba(204, 124, 198, 0.1); padding: 12px; border-radius: 8px; font-size: 14px;
             color: #cc7cc6; margin-bottom: 15px; border: 1px solid rgba(204, 124, 198, 0.2); font-weight: 600;
         }
+        .btn-logout { background-color: #5b4b8a; margin-top: 15px; font-size: 13px; padding: 8px; }
+        .btn-logout:hover { background-color: #45376b; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <!-- HALAMAN LOGIN USERNAME -->
     <div id="login-page">
         <h2>Kuis Komunitas</h2>
         <div class="info-box">Silakan masukkan nama akun Umamusume Anda untuk berpartisipasi.</div>
@@ -51,6 +54,7 @@
         <button id="btn-login" onclick="saveUsername()">Masuk ke Room Kuis</button>
     </div>
 
+    <!-- HALAMAN UTAMA KUIS -->
     <div id="quiz-page" class="hidden">
         <h2 id="room-status">Menunggu Pertanyaan Berjalan...</h2>
         <div id="user-display" style="font-size:14px; margin-bottom:10px; color:#a68fc1; font-weight: 600;"></div>
@@ -65,6 +69,7 @@
         </div>
         
         <div id="msg" class="status-msg"></div>
+        <button class="btn-logout" id="btn-manual-logout" onclick="manualLogout()">Keluar / Ganti Akun</button>
     </div>
 </div>
 
@@ -76,6 +81,7 @@
     let timerInterval = null;
     let isAnswered = false;
 
+    // KUNCI UTAMA: Cek apakah sesi login sudah tersimpan di browser
     if (localStorage.getItem("uma_username")) {
         currentUsername = localStorage.getItem("uma_username");
         showQuizPage();
@@ -97,6 +103,7 @@
         document.getElementById("quiz-page").classList.remove("hidden");
         document.getElementById("user-display").innerText = "Login sebagai: " + currentUsername;
         
+        // Pemantauan berkala status soal aktif dari server
         setInterval(checkActiveQuestion, 2000); 
     }
 
@@ -105,24 +112,38 @@
             let response = await fetch(WEB_APP_URL);
             let data = await response.json();
             
-            if (data && data.activeQuestion == 0) {
-                kickToLoginPage();
-                return;
-            }
-            
-            if (data && data.activeQuestion && !isNaN(data.activeQuestion)) {
+            // Pengondisian ketat: Pastikan data valid dan tidak bernilai kosong/undefined
+            if (data && typeof data.activeQuestion !== "undefined") {
                 let nextQ = parseInt(data.activeQuestion);
-                if (nextQ > currentQuestionNum) {
+                
+                // JIKA SOAL MAJU (ADMIN RUN SOAL BARU)
+                if (!isNaN(nextQ) && nextQ > currentQuestionNum && nextQ !== 0) {
                     currentQuestionNum = nextQ;
                     startQuestionSession();
+                } 
+                // JIKA SIFATNYA JEDA / RESET SESI (NILAI 0 ATAU KICK)
+                else if (nextQ === 0 || data.activeQuestion === "kick" || data.activeQuestion === "0") {
+                    resetToWaitingRoom();
                 }
             }
         } catch (error) {
-            console.log("Koneksi sibuk...");
+            // PERBAIKAN BUG: Jika koneksi server sibuk/gagal merespons, DIAMKAN saja.
+            // Sesi login peserta akan tetap aman di layar kuis dan tidak akan tertendang keluar!
+            console.log("Mencari sinyal server...");
         }
     }
 
-    function kickToLoginPage() {
+    function resetToWaitingRoom() {
+        clearInterval(timerInterval);
+        currentQuestionNum = 0;
+        document.getElementById("room-status").innerText = "Menunggu Pertanyaan Selanjutnya...";
+        document.getElementById("quiz-area").classList.add("hidden");
+        document.getElementById("btn-manual-logout").classList.remove("hidden");
+        document.getElementById("msg").innerText = "";
+    }
+
+    // Fungsi keluar HANYA berjalan jika tombol diklik secara manual oleh user
+    function manualLogout() {
         clearInterval(timerInterval);
         currentQuestionNum = 0;
         localStorage.removeItem("uma_username"); 
@@ -136,6 +157,7 @@
         isAnswered = false;
         document.getElementById("room-status").innerText = "Pertanyaan " + currentQuestionNum + " Dimulai!";
         document.getElementById("quiz-area").classList.remove("hidden");
+        document.getElementById("btn-manual-logout").classList.add("hidden"); // Sembunyikan tombol logout saat soal aktif
         document.getElementById("jawaban").value = "";
         document.getElementById("jawaban").disabled = false;
         document.getElementById("btn-submit").disabled = false;
@@ -159,6 +181,7 @@
         document.getElementById("jawaban").disabled = true;
         document.getElementById("btn-submit").disabled = true;
         document.getElementById("countdown").innerText = "0";
+        document.getElementById("btn-manual-logout").classList.remove("hidden");
         if (!isAnswered) {
             document.getElementById("msg").style.color = "#ef4444";
             document.getElementById("msg").innerText = message;
@@ -196,6 +219,7 @@
             document.getElementById("msg").innerText = "Jawaban Terkirim! Menunggu koreksi juri...";
             clearInterval(timerInterval);
             document.getElementById("countdown").innerText = "-";
+            document.getElementById("btn-manual-logout").classList.remove("hidden");
 
         } catch (error) {
             document.getElementById("msg").style.color = "#ef4444";
