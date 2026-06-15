@@ -197,15 +197,31 @@
                     let rowClass = "";
                     let statusBadge = "";
                     
-                    if(row.isCorrect && !row.isBanned) {
+                    // Pembacaan status mutakhir berdasarkan aturan baru backend
+                    if(row.finalStatus === "BENAR") {
                         rowClass = "row-correct";
                         statusBadge = '<span class="badge badge-success">BENAR & TERCEPAT</span>';
-                    } else if(row.isCorrect && row.isBanned) {
+                    } else if(row.finalStatus === "BANNED") {
                         rowClass = "row-banned";
                         statusBadge = '<span class="badge badge-danger">BENAR (BANNED >3 WIN)</span>';
                     } else {
                         statusBadge = '<span class="badge" style="background:#e2e8f0; color:#475569;">SALAH</span>';
                     }
+                    
+                    html += `<tr class="${rowClass}">
+                        <td>${index + 1}</td>
+                        <td>${row.timestamp}</td>
+                        <td>${row.username}</td>
+                        <td>${row.jawaban}</td>
+                        <td>${statusBadge}</td>
+                    </tr>`;
+                });
+            }
+            document.getElementById("results-body").innerHTML = html;
+        } catch (error) {
+            document.getElementById("results-body").innerHTML = '<tr><td colspan="5" style="text-align:center; color:#ef4444; padding: 15px;">Gagal mengambil rekap jawaban.</td></tr>';
+        }
+    }
                     
                     html += `<tr class="${rowClass}">
                         <td>${index + 1}</td>
