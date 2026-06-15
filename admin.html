@@ -13,7 +13,6 @@
             position: relative;
         }
 
-        /* PERBAIKAN STRUKTUR LOCK SCREEN */
         #admin-lock-screen {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: linear-gradient(135deg, #e29ab9 0%, #a68fc1 100%);
@@ -27,7 +26,6 @@
         .login-box input { width: 100%; padding: 14px; margin-bottom: 20px; border: 2px solid #e29ab9; border-radius: 8px; text-align: center; font-size: 16px; color: #5b4b8a; background: white; }
         .login-box input:focus { outline: none; border-color: #cc7cc6; }
 
-        /* INTEGRASI DASHBOARD UTAMA */
         .top-bar {
             display: flex; justify-content: space-between; align-items: center;
             background: rgba(248, 246, 248, 0.9); padding: 15px 25px; border-radius: 14px;
@@ -150,9 +148,11 @@
         let nextQ = currentQ + 1;
         document.getElementById("tag-status").innerText = "LOADING...";
         
+        let reqStart = Date.now();
         try {
             let response = await fetch(`${WEB_APP_URL}?action=nextQuestion&q=${nextQ}`);
             let data = await response.json();
+            let reqEnd = Date.now();
             
             if(data.status === "success") {
                 currentQ = nextQ;
@@ -160,21 +160,26 @@
                 document.getElementById("text-pertanyaan").innerText = data.questionText;
                 document.getElementById("tag-status").innerText = "SOAL " + currentQ;
                 
-                let timeLeft = 10;
-                document.getElementById("admin-timer").innerText = timeLeft;
+                let latency = (reqEnd - reqStart) / 2;
+                let adminServerOffset = data.serverTime - (reqEnd - latency);
+                let adminStartTime = data.startTime;
                 
                 clearInterval(timerInterval);
                 timerInterval = setInterval(() => {
-                    timeLeft--;
-                    if (timeLeft < 0) timeLeft = 0;
-                    document.getElementById("admin-timer").innerText = timeLeft;
-                    if (timeLeft <= 0) {
+                    let currentServerTime = Date.now() + adminServerOffset;
+                    let elapsedMs = currentServerTime - adminStartTime;
+                    let preciseTimeLeft = 10 - (elapsedMs / 1000);
+                    
+                    if (preciseTimeLeft <= 0) {
                         clearInterval(timerInterval);
+                        document.getElementById("admin-timer").innerText = "0";
                         document.getElementById("btn-next").disabled = false;
                         document.getElementById("tag-status").innerText = "WAKTU HABIS";
                         fetchResults();
+                    } else {
+                        document.getElementById("admin-timer").innerText = Math.ceil(preciseTimeLeft);
                     }
-                }, 1000);
+                }, 100);
             }
         } catch (error) {
             alert("Gagal memajukan pertanyaan!");
