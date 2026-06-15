@@ -10,12 +10,14 @@
         body { 
             background: linear-gradient(135deg, #e29ab9 0%, #a68fc1 100%); 
             min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 25px; color: #5b4b8a; overflow-x: hidden;
+            position: relative;
         }
 
+        /* PERBAIKAN STRUKTUR LOCK SCREEN */
         #admin-lock-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: linear-gradient(135deg, #e29ab9 0%, #a68fc1 100%);
-            display: flex; justify-content: center; align-items: center; z-index: 9999;
+            display: flex; justify-content: center; align-items: center; z-index: 99999;
         }
         .login-box {
             background: #f8f6f8; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(91, 75, 138, 0.3);
@@ -25,6 +27,7 @@
         .login-box input { width: 100%; padding: 14px; margin-bottom: 20px; border: 2px solid #e29ab9; border-radius: 8px; text-align: center; font-size: 16px; color: #5b4b8a; background: white; }
         .login-box input:focus { outline: none; border-color: #cc7cc6; }
 
+        /* INTEGRASI DASHBOARD UTAMA */
         .top-bar {
             display: flex; justify-content: space-between; align-items: center;
             background: rgba(248, 246, 248, 0.9); padding: 15px 25px; border-radius: 14px;
@@ -33,6 +36,10 @@
         .status-box { font-size: 18px; font-weight: 700; color: #5b4b8a; }
         .control-buttons { display: flex; gap: 12px; }
         .btn { padding: 12px 24px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s ease; }
+        
+        .btn-login-submit { background: #cc7cc6; color: #f8f6f8; width: 100%; display: block; text-shadow: none; box-shadow: 0 4px 10px rgba(204, 124, 198, 0.3); }
+        .btn-login-submit:hover { background: #b562af; }
+        
         .btn-primary { background: #cc7cc6; color: #f8f6f8; box-shadow: 0 4px 10px rgba(204, 124, 198, 0.3); }
         .btn-primary:hover { background: #b562af; }
         .btn-danger { background: #5b4b8a; color: #f8f6f8; }
@@ -74,8 +81,8 @@
     <div id="admin-lock-screen">
         <div class="login-box">
             <h2>LOGIN HOST JURI</h2>
-            <input type="password" id="admin-pass" placeholder="Masukkan Password Juri...">
-            <button class="btn btn-primary" onclick="verifyAdmin()">Masuk Dashboard</button>
+            <input type="password" id="admin-pass" placeholder="Masukkan Password Juri..." autofocus autocomplete="off">
+            <button class="btn btn-login-submit" id="submit-login-btn">Masuk Dashboard</button>
         </div>
     </div>
 
@@ -116,18 +123,27 @@
     </div>
 
 <script>
-    // DEKLARASI DI ATAS AGAR TIDAK ERROR UNDEFINED
+    // MASUKKAN GLOBAL URL UTAMA DULUAN
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwxBS2ggKLPp9in6nWPORPXGQ704ppXuFThANpRCuLI0BbBfsswjBBPBvyW3xp42jUv/exec"; 
     
     let currentQ = 0;
     let timerInterval = null;
 
-    function verifyAdmin() {
-        const pass = document.getElementById("admin-pass").value.trim();
-        if(pass === "rnyarifrah") { 
-            document.getElementById("admin-lock-screen").style.display = "none";
+    // SISTEM VERIFIKASI ANTI BLOCK MENGGUNAKAN EVENT LISTENER MURNI
+    document.getElementById("submit-login-btn").addEventListener("click", runVerification);
+    document.getElementById("admin-pass").addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            runVerification();
+        }
+    });
+
+    function runVerification() {
+        const inputPass = document.getElementById("admin-pass").value.trim();
+        if (inputPass === "rnyarifrah") {
+            document.getElementById("admin-lock-screen").style.setProperty("display", "none", "important");
         } else {
             alert("Password Juri Salah!");
+            document.getElementById("admin-pass").value = "";
         }
     }
 
