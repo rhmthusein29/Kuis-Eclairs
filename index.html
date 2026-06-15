@@ -75,7 +75,7 @@
     let currentUsername = "";
     let currentQuestionNum = 0;
     let timerInterval = null;
-    let checkInterval = null;
+    let isPolling = false; 
     let isAnswered = false;
     let timeLeft = 10;
 
@@ -100,8 +100,20 @@
         document.getElementById("quiz-page").classList.remove("hidden");
         document.getElementById("user-display").innerText = "Login sebagai: " + currentUsername;
         
-        if (!checkInterval) {
-            checkInterval = setInterval(checkActiveQuestion, 500); 
+        if (!isPolling) {
+            isPolling = true;
+            runPollingLoop();
+        }
+    }
+
+    async function runPollingLoop() {
+        if (!isPolling) return;
+        
+        await checkActiveQuestion();
+        
+        // Menjadwalkan cek berikutnya HANYA setelah request saat ini selesai sepenuhnya
+        if (isPolling) {
+            setTimeout(runPollingLoop, 800); 
         }
     }
 
@@ -111,30 +123,31 @@
             let data = await response.json();
             
             if (data && typeof data.activeQuestion !== "undefined") {
+                // Konversi aman nilai activeQuestion ke Integer (jika '', 0, atau 'kick' akan ternormalisasi menjadi 0)
+                let serverActiveQ = parseInt(data.activeQuestion) || 0;
                 
-                if (data.activeQuestion == 0 || data.activeQuestion === "0" || data.activeQuestion === "kick") {
+                // JIKA SIFATNYA RESET SESI ATAU RESET KUIS (Server mengembalikan nilai 0)
+                if (serverActiveQ === 0) {
                     if (currentQuestionNum !== 0) {
                         kickToLoginPage();
                     }
                     return;
                 }
                 
-                let nextQ = parseInt(data.activeQuestion);
-                
-                if (!isNaN(nextQ) && nextQ > currentQuestionNum) {
-                    currentQuestionNum = nextQ;
+                // JIKA ADA PERTANYAAN BARU DI SERVER
+                if (serverActiveQ > currentQuestionNum) {
+                    currentQuestionNum = serverActiveQ;
                     startQuestionSession(parseInt(data.timeLeft));
                 }
             }
         } catch (error) {
-            console.log("Koneksi sibuk...");
+            console.log("Jaringan sibuk, mencoba kembali di antrean berikutnya...");
         }
     }
 
     function kickToLoginPage() {
         clearInterval(timerInterval);
-        clearInterval(checkInterval);
-        checkInterval = null;
+        isPolling = false; 
         currentQuestionNum = 0;
         localStorage.removeItem("uma_username"); 
         document.getElementById("username").value = "";
