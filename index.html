@@ -57,7 +57,7 @@
         <div id="user-display" style="font-size:14px; margin-bottom:10px; color:#a68fc1; font-weight: 600;"></div>
         
         <div id="quiz-area" class="hidden">
-            <div class="timer" id="countdown">10</div>
+            <div class="timer" id="countdown">20</div>
             <div class="form-group">
                 <label for="jawaban">Jawaban Anda:</label>
                 <input type="text" id="jawaban" placeholder="Ketik jawaban di sini..." autocomplete="off">
@@ -179,7 +179,7 @@
         
         let currentServerTime = Date.now() + serverOffset;
         let elapsedMs = currentServerTime - serverStartTime;
-        let preciseTimeLeft = 10 - (elapsedMs / 1000);
+        let preciseTimeLeft = 20 - (elapsedMs / 1000);
         
         if (preciseTimeLeft <= 0) {
             preciseTimeLeft = 0;
