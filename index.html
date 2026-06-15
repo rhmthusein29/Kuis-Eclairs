@@ -75,6 +75,7 @@
     let currentUsername = "";
     let currentQuestionNum = 0;
     let timerInterval = null;
+    let checkInterval = null;
     let isAnswered = false;
     let timeLeft = 10;
 
@@ -99,7 +100,9 @@
         document.getElementById("quiz-page").classList.remove("hidden");
         document.getElementById("user-display").innerText = "Login sebagai: " + currentUsername;
         
-        setInterval(checkActiveQuestion, 2000); 
+        if (!checkInterval) {
+            checkInterval = setInterval(checkActiveQuestion, 500); 
+        }
     }
 
     async function checkActiveQuestion() {
@@ -109,9 +112,8 @@
             
             if (data && typeof data.activeQuestion !== "undefined") {
                 
-                // FIXED 2: JIKA ADMIN TEKAN RESET SESI (Nilai kembali ke 0 atau "kick")
                 if (data.activeQuestion == 0 || data.activeQuestion === "0" || data.activeQuestion === "kick") {
-                    if (document.getElementById("login-page").classList.contains("hidden")) {
+                    if (currentQuestionNum !== 0) {
                         kickToLoginPage();
                     }
                     return;
@@ -119,7 +121,6 @@
                 
                 let nextQ = parseInt(data.activeQuestion);
                 
-                // FIXED 1: SOAL MAJU -> Sinkronisasi sisa waktu server HANYA 1 kali di awal deteksi soal
                 if (!isNaN(nextQ) && nextQ > currentQuestionNum) {
                     currentQuestionNum = nextQ;
                     startQuestionSession(parseInt(data.timeLeft));
@@ -130,12 +131,14 @@
         }
     }
 
-    // FUNGSI LOGOUT OTOMATIS AMAN DIPANGGIL ULANG
     function kickToLoginPage() {
         clearInterval(timerInterval);
+        clearInterval(checkInterval);
+        checkInterval = null;
         currentQuestionNum = 0;
         localStorage.removeItem("uma_username"); 
         document.getElementById("username").value = "";
+        document.getElementById("room-status").innerText = "Menunggu Pertanyaan Berjalan...";
         document.getElementById("quiz-area").classList.add("hidden");
         document.getElementById("quiz-page").classList.add("hidden");
         document.getElementById("login-page").classList.remove("hidden");
@@ -150,12 +153,10 @@
         document.getElementById("btn-submit").disabled = false;
         document.getElementById("msg").innerText = "";
         
-        // Ambil kompensasi sisa waktu server saat pertama kali halaman termuat
         timeLeft = serverTimeLeft;
         document.getElementById("countdown").innerText = timeLeft;
         
         clearInterval(timerInterval);
-        // Jalankan countdown lokal murni 100% lancar tanpa interupsi data lemot server
         timerInterval = setInterval(() => {
             timeLeft--;
             if (timeLeft < 0) timeLeft = 0;
