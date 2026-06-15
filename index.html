@@ -76,6 +76,7 @@
     let currentQuestionNum = 0;
     let timerInterval = null;
     let isAnswered = false;
+    let timeLeft = 10;
 
     if (localStorage.getItem("uma_username")) {
         currentUsername = localStorage.getItem("uma_username");
@@ -106,13 +107,23 @@
             let response = await fetch(WEB_APP_URL);
             let data = await response.json();
             
-            if (data && data.activeQuestion && !isNaN(data.activeQuestion)) {
+            if (data && typeof data.activeQuestion !== "undefined") {
                 let nextQ = parseInt(data.activeQuestion);
-                if (nextQ > currentQuestionNum && nextQ !== 0) {
+                
+                // JIKA SOAL MAJU: Mulai sesi berdasarkan sisa waktu server
+                if (!isNaN(nextQ) && nextQ > currentQuestionNum && nextQ !== 0) {
                     currentQuestionNum = nextQ;
-                    startQuestionSession();
+                    startQuestionSession(parseInt(data.timeLeft));
                 } else if (nextQ === 0 && currentQuestionNum !== 0) {
                     resetToWaitingRoom();
+                } 
+                // SINKRONISASI AKTIF: Paksa waktu lokal mengikuti sisa detik real server Google
+                else if (nextQ === currentQuestionNum && nextQ !== 0) {
+                    timeLeft = parseInt(data.timeLeft);
+                    document.getElementById("countdown").innerText = timeLeft;
+                    if (timeLeft <= 0) {
+                        lockInput("Waktu habis!");
+                    }
                 }
             }
         } catch (error) {
@@ -128,7 +139,7 @@
         document.getElementById("msg").innerText = "";
     }
 
-    function startQuestionSession() {
+    function startQuestionSession(serverTimeLeft) {
         isAnswered = false;
         document.getElementById("room-status").innerText = "Pertanyaan " + currentQuestionNum + " Dimulai!";
         document.getElementById("quiz-area").classList.remove("hidden");
@@ -137,12 +148,13 @@
         document.getElementById("btn-submit").disabled = false;
         document.getElementById("msg").innerText = "";
         
-        let timeLeft = 10;
+        timeLeft = serverTimeLeft;
         document.getElementById("countdown").innerText = timeLeft;
         
         clearInterval(timerInterval);
         timerInterval = setInterval(() => {
             timeLeft--;
+            if (timeLeft < 0) timeLeft = 0;
             document.getElementById("countdown").innerText = timeLeft;
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
