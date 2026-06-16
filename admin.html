@@ -90,7 +90,7 @@
             <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()">Pertanyaan Selanjutnya</button>
             <button class="btn btn-danger" id="btn-stop" onclick="stopQuestion()">Reset Sesi / Logout Semua User</button>
         </div>
-        <div class="timer-display" id="admin-timer">20</div>
+        <div class="timer-display" id="admin-timer">60</div>
     </div>
 
     <div class="main-question-zone">
@@ -101,7 +101,7 @@
     </div>
 
     <div class="bottom-results-zone">
-        <h2>Hasil Jawaban Masuk (Urutan Tercepat)</h2>
+        <h2>Hasil Jawanan Masuk (Urutan Tercepat)</h2>
         <table id="results-table">
             <thead>
                 <tr>
@@ -178,7 +178,7 @@
                 timerInterval = setInterval(() => {
                     let currentServerTime = Date.now() + adminServerOffset;
                     let elapsedMs = currentServerTime - adminStartTime;
-                    let preciseTimeLeft = 20 - (elapsedMs / 1000);
+                    let preciseTimeLeft = 60 - (elapsedMs / 1000);
                     
                     if (preciseTimeLeft <= 0) {
                         clearInterval(timerInterval);
@@ -209,7 +209,7 @@
                 clearInterval(timerInterval);
                 currentQ = 0;
                 document.getElementById("active-num").innerText = "0";
-                document.getElementById("admin-timer").innerText = "20";
+                document.getElementById("admin-timer").innerText = "60";
                 document.getElementById("tag-status").innerText = "SESSION RESET";
                 document.getElementById("text-pertanyaan").innerHTML = 'Sesi dihentikan / Jeda kuis.<br><span style="font-size: 20px; font-weight: 400; color: #a68fc1;">HP Seluruh peserta otomatis ter-logout dari room kuis.</span>';
                 document.getElementById("results-body").innerHTML = '<tr><td colspan="5" style="text-align:center; color:#a68fc1; padding: 15px;">Sesi dikosongkan.</td></tr>';
